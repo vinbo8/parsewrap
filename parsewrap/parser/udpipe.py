@@ -1,9 +1,12 @@
 import sys
 import subprocess
-from parser import Parser
+import configparser
+from temper.parser import Parser
 
 class UDPipe(Parser):
     def __init__(self):
+        super().__init__()
+        options = self.cp.get('udpipe', 'path')
         sys.stdout.write("Initialised UDPipe instance..\n")
 
     def run(self, conllu, *args, **kwargs):

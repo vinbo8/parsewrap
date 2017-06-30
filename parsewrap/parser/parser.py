@@ -1,23 +1,20 @@
+import configparser
 from abc import ABC, abstractmethod
 
 class Parser(ABC):
-    @abstractmethod
     def __init__(self):
-        pass
+        self.cp = configparser.ConfigParser()
+        self.cp.read("../config/paths.conf")
 
-    @abstractmethod
     def train(self, conllu, **kwargs):
-        pass
+        raise NotImplementedError
     
-    @abstractmethod
     def parse(self, conllu, **kwargs):
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def eval(self, conllu, **kwargs):
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def run(self, conllu, **kwargs):
         if kwargs['train']:
             self.train(conllu, **kwargs)

@@ -15,6 +15,6 @@ args = p.parse_args()
 if not args.train ^ args.parse:
     raise SyntaxError("Dodgy args mate")
 
-u = UDPipe()
+u = MaltParser()
 u.run(sys.stdin, **vars(args))
 

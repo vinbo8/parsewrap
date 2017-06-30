@@ -1,7 +1,7 @@
 import sys
 import argparse
 from argparse import ArgumentParser
-from udpipe import UDPipe
+from parser import UDPipe, MaltParser
 
 p = ArgumentParser()
 p.add_argument('--train', action='store_true')

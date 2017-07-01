@@ -3,6 +3,7 @@ import re
 import subprocess
 import configparser
 import os
+import shutil
 from abc import ABC, abstractmethod
 
 class Parser(ABC):
@@ -47,7 +48,7 @@ class MaltParser(Parser):
                 f.write(line)
         
         proc =  subprocess.Popen(['java', '-jar', self.path,
-                                  '-c', kwargs['model'], '-i',
+                                  '-c', '.temp.model', '-i',
                                   '.temp', '-if', 'conllu',
                                   '-F', self.feature_path,
                                   '-m', 'learn'])
@@ -59,6 +60,7 @@ class MaltParser(Parser):
             sys.stdout.write(stderr)
 
         # cleanup
+        shutil.move('.temp.model.mco', kwargs['model'])
         os.remove('.temp')
 
     def parse(self, conllu, *args, **kwargs):
@@ -73,8 +75,9 @@ class MaltParser(Parser):
             for line in conllu:
                 f.write(line)
 
+        shutil.copy(kwargs['model'], '.temp.model.mco')
         parser_args = ['java', '-jar', self.path,
-                       '-c', kwargs['model'], '-i',
+                       '-c', '.temp.model', '-i',
                        '.temp', '-o', '.temp_out',
                        '-m', 'parse']
 
@@ -92,6 +95,7 @@ class MaltParser(Parser):
                 sys.stdout.write(line)
 
         # cleanup
+        os.remove('.temp.model.mco')
         os.remove('.temp')
         os.remove('.temp_out')
 

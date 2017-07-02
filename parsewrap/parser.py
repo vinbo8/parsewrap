@@ -5,6 +5,7 @@ import configparser
 import os
 import shutil
 from abc import ABC, abstractmethod
+from helpers import evaluate
 
 class Parser(ABC):
     def __init__(self):
@@ -89,10 +90,16 @@ class MaltParser(Parser):
         if stderr:
             sys.stdout.write(stderr)
 
-        # write file to stdout
         with open('.temp_out', 'r') as f:
-            for line in f:
-                sys.stdout.write(line)
+            # evaluate
+            if kwargs['eval']:
+                uas, las = evaluate('.temp', '.temp_out')
+                sys.stdout.write("LAS: {0:.2f}; UAS: {0:.2f}".format(las, uas))
+
+            # write file to stdout
+            else:
+                for line in f:
+                    sys.stdout.write(line)
 
         # cleanup
         os.remove('.temp.model.mco')
@@ -100,8 +107,7 @@ class MaltParser(Parser):
         os.remove('.temp_out')
 
     def eval(self, conllu, *args, **kwargs):
-        args = list(args)
-        args = args + ['--accuracy']
+        kwargs['eval'] = True
         self.parse(conllu, *args, **kwargs)
 
 class UDPipe(Parser):

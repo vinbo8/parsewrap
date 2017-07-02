@@ -5,12 +5,16 @@ import configparser
 import os
 import shutil
 from abc import ABC, abstractmethod
-from helpers import evaluate
+from parsewrap.helpers import evaluate
 
 class Parser(ABC):
     def __init__(self):
+        module_dir = os.path.dirname(__file__)
         self.cp = configparser.ConfigParser()
-        self.cp.read("../config/paths.conf")
+    #    self.cp.read("../config/paths.conf")
+#        self.cp.read(os.path.join(module_dir, '..', 'config', 'paths.conf'))
+        self.cp.read(os.path.join(os.path.expanduser('~'), '.config',
+                                  'parsewrap', 'paths.conf'))
 
     def train(self, conllu, **kwargs):
         raise NotImplementedError

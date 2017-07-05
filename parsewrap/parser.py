@@ -11,8 +11,6 @@ class Parser(ABC):
     def __init__(self):
         module_dir = os.path.dirname(__file__)
         self.cp = configparser.ConfigParser()
-    #    self.cp.read("../config/paths.conf")
-#        self.cp.read(os.path.join(module_dir, '..', 'config', 'paths.conf'))
         self.cp.read(os.path.join(os.path.expanduser('~'), '.config',
                                   'parsewrap', 'paths.conf'))
 
@@ -42,7 +40,7 @@ class MaltParser(Parser):
 
         # make this customisable
         self.feature_path = re.sub(r'/[^/]*$', '', self.path) + '/appdata/features/liblinear/conllu/NivreEager.xml'
-        sys.stdout.write("Initialised MaltParser instance..\n")
+        sys.stderr.write("Initialised MaltParser instance..\n")
 
     def run(self, conllu, *args, **kwargs):
         return super(MaltParser, self).run(conllu, **kwargs)
@@ -52,7 +50,7 @@ class MaltParser(Parser):
             for line in conllu:
                 f.write(line)
         
-        proc =  subprocess.Popen(['java', '-jar', self.path,
+        proc =  subprocess.Popen(['java', '-Xmx2000M', '-jar', self.path,
                                   '-c', '.temp.model', '-i',
                                   '.temp', '-if', 'conllu',
                                   '-F', self.feature_path,
@@ -65,7 +63,8 @@ class MaltParser(Parser):
             sys.stdout.write(stderr)
 
         # cleanup
-        shutil.move('.temp.model.mco', kwargs['model'])
+        shutil.move('.temp.model.mco', os.path.join(os.getcwd(),
+                                                    kwargs['model']))
         os.remove('.temp')
 
     def parse(self, conllu, *args, **kwargs):
@@ -80,7 +79,9 @@ class MaltParser(Parser):
             for line in conllu:
                 f.write(line)
 
-        shutil.copy(kwargs['model'], '.temp.model.mco')
+        shutil.copy(os.path.join(os.getcwd(),
+                                 kwargs['model']),
+                    '.temp.model.mco')
         parser_args = ['java', '-jar', self.path,
                        '-c', '.temp.model', '-i',
                        '.temp', '-o', '.temp_out',
@@ -96,9 +97,9 @@ class MaltParser(Parser):
 
         with open('.temp_out', 'r') as f:
             # evaluate
-            if kwargs['eval']:
+            if kwargs['evaluate']:
                 uas, las = evaluate('.temp', '.temp_out')
-                sys.stdout.write("LAS: {0:.2f}; UAS: {0:.2f}".format(las, uas))
+                sys.stdout.write("LAS: {:.2f}; UAS: {:.2f}\n".format(las, uas))
 
             # write file to stdout
             else:
@@ -118,14 +119,15 @@ class UDPipe(Parser):
     def __init__(self):
         super().__init__()
         options = self.cp.get('udpipe', 'path')
-        sys.stdout.write("Initialised UDPipe instance..\n")
+        sys.stderr.write("Initialised UDPipe instance..\n")
 
     def run(self, conllu, *args, **kwargs):
         return super(UDPipe, self).run(conllu, **kwargs)
 
     def train(self, conllu, *args, **kwargs):
         proc = subprocess.Popen(["udpipe", "--train", "--tagger=none",
-                                 "--tokenizer=none", "out.udpipe"],
+                                 "--tokenizer=none",
+                                 os.path.join(os.getcwd(), kwargs['model'])],
                                 stdin=subprocess.PIPE)
 
         # conllu is stdin; pipe to subprocess stdin
@@ -145,11 +147,11 @@ class UDPipe(Parser):
         for kw in kwargs['extra']:
             args += kw.split("=")
 
-        parser_args = ["udpipe", "--parse"] + args + [kwargs['model']]
+        parser_args = ["udpipe", "--parse"] + args + [os.path.join(os.getcwd(),
+                                                                   kwargs['model'])]
         proc = subprocess.Popen(parser_args,
                                 stdin=subprocess.PIPE)
 
-        
         for line in conllu:
             proc.stdin.write(line.encode('utf-8'))
 

@@ -118,14 +118,14 @@ class MaltParser(Parser):
 class UDPipe(Parser):
     def __init__(self):
         super().__init__()
-        options = self.cp.get('udpipe', 'path')
+        self.path = self.cp.get('udpipe', 'path')
         sys.stderr.write("Initialised UDPipe instance..\n")
 
     def run(self, conllu, *args, **kwargs):
         return super(UDPipe, self).run(conllu, **kwargs)
 
     def train(self, conllu, *args, **kwargs):
-        proc = subprocess.Popen(["udpipe", "--train", "--tagger=none",
+        proc = subprocess.Popen([self.path, "--train", "--tagger=none",
                                  "--tokenizer=none",
                                  os.path.join(os.getcwd(), kwargs['model'])],
                                 stdin=subprocess.PIPE)
@@ -147,7 +147,7 @@ class UDPipe(Parser):
         for kw in kwargs['extra']:
             args += kw.split("=")
 
-        parser_args = ["udpipe", "--parse"] + args + [os.path.join(os.getcwd(),
+        parser_args = [self.path, "--parse"] + args + [os.path.join(os.getcwd(),
                                                                    kwargs['model'])]
         proc = subprocess.Popen(parser_args,
                                 stdin=subprocess.PIPE)
